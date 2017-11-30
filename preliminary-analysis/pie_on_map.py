@@ -50,39 +50,55 @@ def plotit(column):
     m.drawmeridians(np.arange(-120,-40,20),labels=[0,0,0,1])
 
 
-    from data_proc import sm_df
-
-    sm_df.sort_index()
-    uvals = sm_df[column].value_counts().index
-    print(len(uvals))
+    from data_proc import sm_df, vict_df
     import matplotlib.patches as mpatches
 
-    legend_patches = []
-    colour_mapping = {}
-    for idx, v in enumerate(uvals):
-        c = def_colours[idx]
-        colour_mapping[v] = c
-        p = mpatches.Patch(color=c, label=v)
-        legend_patches.append(p)
+    if column == 'vict':
+        g_df = vict_df
+        legend_patches = [
+            mpatches.Patch(color='blue', label='injured'),
+            mpatches.Patch(color='red', label='killed'),
+        ]
+    else:
+        sm_df.sort_index()
+        uvals = sm_df[column].value_counts().index
+        print(len(uvals))
+
+        legend_patches = []
+        colour_mapping = {}
+        for idx, v in enumerate(uvals):
+            c = def_colours[idx]
+            colour_mapping[v] = c
+            p = mpatches.Patch(color=c, label=v)
+            legend_patches.append(p)
+        g_df = sm_df.groupby('state_full')
 
     plt.legend(handles=legend_patches, loc='lower left')
-
-    g_df = sm_df.groupby('state_full')
-
 
     us_state_center = get_coords_map()
 
 
-    for state, df in g_df:
-        vcnt = df[column].value_counts()
-        rel_vcnt = vcnt / vcnt.sum()
+    if column != 'vict':
+        for state, df in g_df:
+            if state in us_state_center:
+                lat, long = us_state_center[state]
+                x, y = m(long, lat)
 
-        colours = map(lambda v: colour_mapping[v], vcnt.index)
-        assert(len(colours) == len(rel_vcnt))
+                vcnt = df[column].value_counts()
+                rel_vcnt = vcnt / vcnt.sum()
 
-        lat, long = us_state_center[state]
-        x, y = m(long, lat)
-        draw_pie(sbp_ax, colors=colours, ratios=rel_vcnt, X=x, Y=y)
+                colours = map(lambda v: colour_mapping[v], vcnt.index)
+                assert(len(colours) == len(rel_vcnt))
+
+                draw_pie(sbp_ax, colors=colours, ratios=rel_vcnt, X=x, Y=y)
+    else:
+        for state in vict_df.index:
+            lat, long = us_state_center[state]
+            x, y = m(long, lat)
+
+            inj = vict_df['inj_rel'].loc[state]
+            kill = vict_df['killed_rel'].loc[state]
+            draw_pie(sbp_ax, ratios=[inj, kill], colors=['blue', 'red'], X=x, Y=y)
 
 
     plt.title(column)

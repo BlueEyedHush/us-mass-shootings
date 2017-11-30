@@ -137,3 +137,7 @@ race_map = {
 sm_df = ms_ds.copy()
 sm_df.replace({'state_full': state_name_map}, inplace=True)
 sm_df.replace({'races_dedup': race_map}, inplace=True)
+
+vict_df = sm_df.groupby('state_full').sum()
+vict_df['inj_rel'] = vict_df['Injured']/vict_df['Total victims']
+vict_df['killed_rel'] = vict_df['Fatalities']/vict_df['Total victims']
