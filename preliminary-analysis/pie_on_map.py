@@ -6,9 +6,9 @@ from mpl_toolkits.basemap import Basemap as Basemap
 from matplotlib.patches import Polygon
 from us_states_coords import get_coords_map
 
-colors = ['red','blue','green','yellow','magenta','purple']
+def_colours = ['red','blue','green','yellow','magenta','purple']
 
-def draw_pie(ax, ratios=[0.4, 0.3, 0.3], X=0, Y=0, size=1000):
+def draw_pie(ax, ratios=[0.4, 0.3, 0.3], colors=def_colours, X=0, Y=0, size=1000):
     N = len(ratios)
 
     xy = []
@@ -51,7 +51,23 @@ plt.title('Filling State Polygons by Population Density')
 
 from data_proc import sm_df
 column = 'gender_dedup'
+
+sm_df.sort_index()
+uvals = sm_df[column].value_counts().index
+import matplotlib.patches as mpatches
+
+legend_patches = []
+colour_mapping = {}
+for idx, v in enumerate(uvals):
+    c = def_colours[idx]
+    colour_mapping[v] = c
+    p = mpatches.Patch(color=c, label=v)
+    legend_patches.append(p)
+
+plt.legend(handles=legend_patches, loc='lower left')
+
 g_df = sm_df.groupby('state_full')
+
 
 us_state_center = get_coords_map()
 
@@ -60,9 +76,12 @@ for state, df in g_df:
     vcnt = df[column].value_counts()
     rel_vcnt = vcnt / vcnt.sum()
 
+    colours = map(lambda v: colour_mapping[v], vcnt.index)
+    assert(len(colours) == len(rel_vcnt))
+
     lat, long = us_state_center[state]
     x, y = m(long, lat)
-    draw_pie(sbp_ax, ratios=rel_vcnt, X=x, Y=y)
+    draw_pie(sbp_ax, colors=colours, ratios=rel_vcnt, X=x, Y=y)
 
 
 plt.show()
