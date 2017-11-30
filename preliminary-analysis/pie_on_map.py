@@ -47,10 +47,9 @@ for nshape,seg in enumerate(m.states):
 m.drawparallels(np.arange(25,65,20),labels=[1,0,0,0])
 m.drawmeridians(np.arange(-120,-40,20),labels=[0,0,0,1])
 
-plt.title('Filling State Polygons by Population Density')
 
 from data_proc import sm_df
-column = 'gender_dedup'
+column = 'missues_dedup'
 
 sm_df.sort_index()
 uvals = sm_df[column].value_counts().index
@@ -84,4 +83,5 @@ for state, df in g_df:
     draw_pie(sbp_ax, colors=colours, ratios=rel_vcnt, X=x, Y=y)
 
 
+plt.title(column)
 plt.show()
