@@ -49,21 +49,14 @@ m.drawmeridians(np.arange(-120,-40,20),labels=[0,0,0,1])
 
 plt.title('Filling State Polygons by Population Density')
 
-from data_proc import ms_ds
+from data_proc import sm_df
 column = 'gender_dedup'
-g_df = ms_ds.groupby('state_full')
+g_df = sm_df.groupby('state_full')
 
 us_state_center = get_coords_map()
 
-incorrect_state_names = {
-    'pensylvania': 'pennsylvania',
-    'washington d.c.': 'maryland'
-}
 
 for state, df in g_df:
-    if state in incorrect_state_names:
-        state = incorrect_state_names[state]
-
     vcnt = df[column].value_counts()
     rel_vcnt = vcnt / vcnt.sum()
 

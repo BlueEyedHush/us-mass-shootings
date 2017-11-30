@@ -122,3 +122,10 @@ bmp = ms_ds.copy()
 bmp['count'] = 1
 by_month = bmp.groupby(['month']).sum()
 by_month = by_month[['Fatalities', 'Injured', 'Total victims', 'count']]
+
+# appropriate for state-based groupping
+state_name_map = {
+    'pensylvania': 'pennsylvania',
+    'washington d.c.': 'maryland'
+}
+sm_df = ms_ds.replace({'state_full': state_name_map})
