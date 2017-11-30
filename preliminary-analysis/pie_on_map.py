@@ -49,13 +49,27 @@ m.drawmeridians(np.arange(-120,-40,20),labels=[0,0,0,1])
 
 plt.title('Filling State Polygons by Population Density')
 
+from data_proc import ms_ds
+column = 'gender_dedup'
+g_df = ms_ds.groupby('state_full')
+
 us_state_center = get_coords_map()
-for shapedict in m.states_info:
-    statename = shapedict['NAME']
-    # skip DC and Puerto Rico.
-    if statename not in ['District of Columbia','Puerto Rico']:
-        lat, long = us_state_center[statename]
-        x,y = m(long,lat)
-        draw_pie(sbp_ax, X=x, Y=y)
+
+incorrect_state_names = {
+    'pensylvania': 'pennsylvania',
+    'washington d.c.': 'maryland'
+}
+
+for state, df in g_df:
+    if state in incorrect_state_names:
+        state = incorrect_state_names[state]
+
+    vcnt = df[column].value_counts()
+    rel_vcnt = vcnt / vcnt.sum()
+
+    lat, long = us_state_center[state]
+    x, y = m(long, lat)
+    draw_pie(sbp_ax, ratios=rel_vcnt, X=x, Y=y)
+
 
 plt.show()

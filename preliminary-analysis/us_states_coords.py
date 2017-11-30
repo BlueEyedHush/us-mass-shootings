@@ -76,5 +76,6 @@ def get_coords_map():
 
         mapping[abbrev_st] = (lat, long)
         mapping[st] = (lat, long)
+        mapping[st.lower()] = (lat, long)
 
     return mapping
