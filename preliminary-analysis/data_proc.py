@@ -128,4 +128,12 @@ state_name_map = {
     'pensylvania': 'pennsylvania',
     'washington d.c.': 'maryland'
 }
-sm_df = ms_ds.replace({'state_full': state_name_map})
+race_map = {
+    '>1': float('NaN'),
+    'asian; other; >1': 'asian',
+    'u; black; >1': 'black',
+    'white; other; >1': 'white',
+}
+sm_df = ms_ds.copy()
+sm_df.replace({'state_full': state_name_map}, inplace=True)
+sm_df.replace({'races_dedup': race_map}, inplace=True)
