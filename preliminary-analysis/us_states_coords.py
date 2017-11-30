@@ -78,5 +78,3 @@ def get_coords_map():
         mapping[st] = (lat, long)
 
     return mapping
-
-print get_coords_map()

@@ -4,6 +4,9 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.basemap import Basemap as Basemap
 from matplotlib.colors import rgb2hex
 from matplotlib.patches import Polygon
+from us_states_coords import get_coords_map
+
+us_state_center = get_coords_map()
 
 # Lambert Conformal map of lower 48 states.
 m = Basemap(llcrnrlon=-119,llcrnrlat=22,urcrnrlon=-64,urcrnrlat=49,
@@ -78,20 +81,16 @@ for shapedict in m.states_info:
     statename = shapedict['NAME']
     # skip DC and Puerto Rico.
     if statename not in ['District of Columbia','Puerto Rico']:
-        pop = popdensity[statename]
-        # calling colormap with value between 0 and 1 returns
-        # rgba value.  Invert color range (hot colors are high
-        # population), take sqrt root to spread out colors more.
-        colors[statename] = cmap(1.-np.sqrt((pop-vmin)/(vmax-vmin)))[:3]
+        lat, long = us_state_center[statename]
+        x,y = m(long,lat)
+        m.plot(x,y,'bo', markersize=20)
+
     statenames.append(statename)
 # cycle through state names, color each one.
 ax = plt.gca() # get current axes instance
 for nshape,seg in enumerate(m.states):
-    # skip DC and Puerto Rico.
-    if statenames[nshape] not in ['District of Columbia','Puerto Rico']:
-        color = rgb2hex(colors[statenames[nshape]])
-        poly = Polygon(seg,facecolor=color,edgecolor=color)
-        ax.add_patch(poly)
+    poly = Polygon(seg,facecolor='white')
+    ax.add_patch(poly)
 # draw meridians and parallels.
 m.drawparallels(np.arange(25,65,20),labels=[1,0,0,0])
 m.drawmeridians(np.arange(-120,-40,20),labels=[0,0,0,1])
