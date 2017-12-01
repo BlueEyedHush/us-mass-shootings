@@ -6,7 +6,7 @@ from mpl_toolkits.basemap import Basemap as Basemap
 from matplotlib.patches import Polygon
 from us_states_coords import get_coords_map
 
-def plotit(column):
+def plotit(col_name):
 
     def_colours = ['red','blue','green','yellow','magenta','purple', 'brown', 'orange', 'silver', 'gold']
 
@@ -53,53 +53,59 @@ def plotit(column):
     from data_proc import sm_df, vict_df
     import matplotlib.patches as mpatches
 
-    if column == 'vict':
-        g_df = vict_df
-        legend_patches = [
-            mpatches.Patch(color='blue', label='injured'),
-            mpatches.Patch(color='red', label='killed'),
-        ]
-    else:
-        sm_df.sort_index()
-        uvals = sm_df[column].value_counts().index
-        print(len(uvals))
+    multicolumn_plots = {
+        'vict': (['inj_rel', 'killed_rel'], vict_df)
+    }
 
-        legend_patches = []
-        colour_mapping = {}
-        for idx, v in enumerate(uvals):
-            c = def_colours[idx]
-            colour_mapping[v] = c
-            p = mpatches.Patch(color=c, label=v)
-            legend_patches.append(p)
-        g_df = sm_df.groupby('state_full')
+
+    state_to_ratios = {}
+    possible_labels = []
+
+    if col_name in multicolumn_plots:
+        columns, g_df = multicolumn_plots[col_name]
+        possible_labels = columns
+
+        for state in g_df.index:
+            ratios = []
+            for c in columns:
+                ratios.append(g_df[c].loc[state])
+            state_to_ratios[state] = ratios
+    else:
+        sorted_idx_df = sm_df.sort_index()
+        g_df = sorted_idx_df.groupby('state_full')
+        possible_labels = sorted_idx_df[col_name].value_counts().index
+
+        for state, df in g_df:
+            vcnt = df[col_name].value_counts()
+            rel_vcnt = vcnt / vcnt.sum()
+
+            ratios = []
+            for lbl in possible_labels:
+                if lbl in rel_vcnt.index:
+                    ratios.append(rel_vcnt.loc[lbl])
+                else:
+                    ratios.append(0.0)
+
+            state_to_ratios[state] = ratios
+
+    legend_patches = []
+    for idx, lval in enumerate(possible_labels):
+        c = def_colours[idx]
+        p = mpatches.Patch(color=c, label=lval)
+        legend_patches.append(p)
 
     plt.legend(handles=legend_patches, loc='lower left')
 
     us_state_center = get_coords_map()
 
 
-    if column != 'vict':
-        for state, df in g_df:
-            if state in us_state_center:
-                lat, long = us_state_center[state]
-                x, y = m(long, lat)
-
-                vcnt = df[column].value_counts()
-                rel_vcnt = vcnt / vcnt.sum()
-
-                colours = map(lambda v: colour_mapping[v], vcnt.index)
-                assert(len(colours) == len(rel_vcnt))
-
-                draw_pie(sbp_ax, colors=colours, ratios=rel_vcnt, X=x, Y=y)
-    else:
-        for state in vict_df.index:
+    for state in us_state_center:
+        if state in state_to_ratios:
+            r = state_to_ratios[state]
             lat, long = us_state_center[state]
             x, y = m(long, lat)
-
-            inj = vict_df['inj_rel'].loc[state]
-            kill = vict_df['killed_rel'].loc[state]
-            draw_pie(sbp_ax, ratios=[inj, kill], colors=['blue', 'red'], X=x, Y=y)
+            draw_pie(sbp_ax, colors=def_colours, ratios=r, X=x, Y=y)
 
 
-    plt.title(column)
+    plt.title(col_name)
     plt.show()
