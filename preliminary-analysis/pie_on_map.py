@@ -6,7 +6,7 @@ from mpl_toolkits.basemap import Basemap as Basemap
 from matplotlib.patches import Polygon
 from us_states_coords import get_coords_map
 
-def plotit(col_name):
+def plotit(col_name, back_name):
 
     def_colours = ['red','blue','green','yellow','magenta','purple', 'brown', 'orange', 'silver', 'gold']
 
@@ -42,15 +42,47 @@ def plotit(col_name):
     shp_info = m.readshapefile('st99_d00','states',drawbounds=True)
     ax = plt.gca() # get current axes instance
 
+    from data_proc import sm_df, vict_df
+    # plotting colour
+    import matplotlib
+    from matplotlib.colors import rgb2hex
+    cmap = matplotlib.cm.get_cmap('Spectral')
+    total = sm_df['Total victims'].sum()
+    victims = sm_df.groupby('state_full')['Total victims'].count()
+
+    statenames = []
+    colors = {}
+    cmap = plt.cm.hot # use 'hot' colormap
+    vmin = 0; vmax = 40 # set range.
+    for shapedict in m.states_info:
+        statename = shapedict['NAME']
+        # skip DC and Puerto Rico.
+        if statename not in ['District of Columbia','Puerto Rico']:
+            # calling colormap with value between 0 and 1 returns
+            # rgba value.  Invert color range (hot colors are high
+            # population), take sqrt root to spread out colors more.
+            if statename.lower() in victims:
+                pop = float(victims.loc[statename.lower()])
+                colors[statename] = cmap(1.-np.sqrt((pop-vmin)/(vmax-vmin)))[:3]
+                print(pop)
+        statenames.append(statename)
+
     for nshape,seg in enumerate(m.states):
-        poly = Polygon(seg,facecolor='white')
+        sname = statenames[nshape]
+        if sname in colors:
+            c = rgb2hex(colors[sname])
+            ec = c 
+        else:
+            c = 'white'
+            ec = 'black'
+
+        poly = Polygon(seg,facecolor=c, edgecolor=ec)
         ax.add_patch(poly)
+
     # draw meridians and parallels.
     m.drawparallels(np.arange(25,65,20),labels=[1,0,0,0])
     m.drawmeridians(np.arange(-120,-40,20),labels=[0,0,0,1])
 
-
-    from data_proc import sm_df, vict_df
     import matplotlib.patches as mpatches
 
     multicolumn_plots = {
