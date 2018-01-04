@@ -91,14 +91,12 @@ def plotit(col_name, back_name):
 
     # plotting colour
     import matplotlib
-    from matplotlib.colors import rgb2hex
-    cmap = matplotlib.cm.get_cmap('Spectral')
-
+    from matplotlib.cm import ScalarMappable
+    from matplotlib.colors import rgb2hex, Normalize
 
     statenames = []
     colors = {}
-    cmap = plt.cm.hot # use 'hot' colormap
-    vmin = 0; vmax = counts.max() # set range.
+    cmap = ScalarMappable(cmap='Wistia', norm=plt.Normalize(vmin=0.0, vmax=counts.max()))
     for shapedict in m.states_info:
         statename = shapedict['NAME']
         # skip DC and Puerto Rico.
@@ -107,8 +105,8 @@ def plotit(col_name, back_name):
             # rgba value.  Invert color range (hot colors are high
             # population), take sqrt root to spread out colors more.
             if statename.lower() in counts:
-                pop = float(counts.loc[statename.lower()])
-                colors[statename] = cmap(1.-np.sqrt((pop-vmin)/(vmax-vmin)))[:3]
+                pop = float(counts[statename.lower()])
+                colors[statename] = cmap.to_rgba(pop)[:3]
         statenames.append(statename)
 
     for nshape,seg in enumerate(m.states):
@@ -157,6 +155,10 @@ def plotit(col_name, back_name):
             x, y = m(long, lat)
             draw_pie(sbp_ax, colors=def_colours, ratios=r, X=x, Y=y)
 
+    cax = fig.add_axes([0.9, 0.1, 0.03, 0.8])
+    # fake up the array of the scalar mappable. Urgh...
+    cmap._A = []
+    fig.colorbar(cmap, cax=cax)
 
     plt.title(col_name)
     plt.show()
