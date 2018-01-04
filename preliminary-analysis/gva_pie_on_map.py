@@ -101,12 +101,12 @@ def plotit(col_name, back_name):
         statename = shapedict['NAME']
         # skip DC and Puerto Rico.
         if statename not in ['District of Columbia','Puerto Rico']:
-            # calling colormap with value between 0 and 1 returns
-            # rgba value.  Invert color range (hot colors are high
-            # population), take sqrt root to spread out colors more.
             if statename.lower() in counts:
-                pop = float(counts[statename.lower()])
-                colors[statename] = cmap.to_rgba(pop)[:3]
+                v = float(counts[statename.lower()])
+            else:
+                v = 0.0
+                
+        colors[statename] = cmap.to_rgba(v)[:3]
         statenames.append(statename)
 
     for nshape,seg in enumerate(m.states):
