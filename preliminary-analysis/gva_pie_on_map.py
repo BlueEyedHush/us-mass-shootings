@@ -55,7 +55,7 @@ counts = json.groupby('state').count()['count']
 
 def plotit(col_name, back_name):
 
-    def_colours = ['red','blue','green','yellow','magenta','purple', 'brown', 'orange', 'silver', 'gold']
+    def_colours = ['red','blue','yellow', 'orange', 'magenta','purple', 'brown', 'silver', 'gold']
 
     def draw_pie(ax, ratios=[0.4, 0.3, 0.3], colors=def_colours, X=0, Y=0, size=1000):
         N = len(ratios)
@@ -96,7 +96,7 @@ def plotit(col_name, back_name):
 
     statenames = []
     colors = {}
-    cmap = ScalarMappable(cmap='Wistia', norm=plt.Normalize(vmin=0.0, vmax=counts.max()))
+    cmap = ScalarMappable(cmap='YlGn', norm=plt.Normalize(vmin=0.0, vmax=counts.max()))
     for shapedict in m.states_info:
         statename = shapedict['NAME']
         # skip DC and Puerto Rico.
